@@ -1327,6 +1327,71 @@ def _process_secondary_sector(environment):
     decomposed_polynomial_derivatives = set(decomposed_polynomial_derivatives)
     ordered_decomposed_derivative_names = set(ordered_decomposed_derivative_names)
 
+    # --------------------------------------------------------
+
+    print(f"integrand: {integrand}\n")
+    print(f"cal_I_derivatives: {cal_I_derivatives}\n")
+    print(f"other_derivatives: {other_derivatives}\n")
+    print(f"decomposed_derivatives: {decomposed_derivatives}\n")
+    print(f"contourdef_Jacobian_derivatives: {contourdef_Jacobian_derivatives}\n")
+    print(f"deformed_integration_variable_derivatives: {deformed_integration_variable_derivatives}\n")
+
+    from sympy.parsing.sympy_parser import parse_expr
+    from sympy.core.function import UndefinedFunction
+    import sympy
+
+    # combine all function definitions into a single dictionary
+    superdict = cal_I_derivatives | other_derivatives | decomposed_derivatives | \
+                contourdef_Jacobian_derivatives | deformed_integration_variable_derivatives
+    superdict |= {"SecDecInternalRealPart" : parse_expr("re(x0)")}
+
+    # tell SymPy these parameters are real and positive, to aid with simplification
+    x0, x1, x2, L0, L1, L2 = sympy.symbols("x0 x1 x2 L0 L1 L2", positive=True)
+    symbol_dict = {"x0": x0, "x1": x1, "x2": x2, "L0": L0, "L1": L1, "L2": L2}
+
+    # convert SecDec symbolic expressions into SymPy symbolic expressions
+    superdict = {k: parse_expr(str(v), symbol_dict) for k, v in superdict.items()}
+    integrand_sympy = parse_expr(str(integrand), symbol_dict)
+
+    while True:
+        # replace all undefined functions which are defined in our dictionary
+        def check_replacement(x):
+            return type(x.func) == UndefinedFunction and x.func.name in superdict
+
+        # look up function definition and substitute arguments (assumes definition is written with arg1=x0, arg2=x1...)
+        def do_replacement(x):
+            return superdict[x.func.name].subs({["x0","x1","x2","e"][i]: e for i,e in enumerate(x.args)})
+
+        new_integrand_sympy = integrand_sympy.replace(check_replacement, do_replacement)
+
+        # exit the loop if no new replacements have been made
+        if new_integrand_sympy == integrand_sympy:
+            break
+
+        integrand_sympy = new_integrand_sympy
+
+    # shorten contour deformation parameter names SecDecInternalLambda{i} -> L{i}
+    integrand_sympy = integrand_sympy.subs({f"SecDecInternalLambda{i}": f"L{i}" for i in range(3)})
+
+    print(f"integrand sympy: {integrand_sympy}\n")
+
+    # take epsilon -> 0 in all exponents
+    integrand_sympy = integrand_sympy.replace(
+        lambda x: isinstance(x, sympy.core.power.Pow),
+        lambda x: x.base**x.exp.subs("eps", 0)
+    )
+
+    # substitute values for box1L integral, to make expansion feasible
+    integrand_sympy = integrand_sympy.subs({"s":4.0, "t":-0.75, "s1":1.25, "msq":1.0})
+    integrand_sympy = integrand_sympy.subs({"L0":1.0, "L1":1.0, "L2":1.0})
+
+    # print coefficients of powers of epsilon from -5 to 5
+    prepared = integrand_sympy.expand().collect("eps")
+    for i in range(-5,5):
+        print(f"eps^{i}: {sympy.latex(prepared.coeff('eps', i).simplify().factor())}\n")
+
+    # --------------------------------------------------------
+
     # generate the function definitions for the insertion in FORM
     if contour_deformation_polynomial is not None:
         FORM_vanishing_deformed_integration_variable_calls = ''.join(
@@ -1456,7 +1521,7 @@ def make_package(name, integration_variables, regulators, requested_orders,
                  form_insertion_depth=5, contour_deformation_polynomial=None, positive_polynomials=[],
                  decomposition_method='geometric_no_primary', normaliz_executable=None,
                  enforce_complex=False, split=False, ibp_power_goal=-1, use_iterative_sort=True,
-                 use_light_Pak=True, use_dreadnaut=False, use_Pak=True, processes=None, pylink_qmc_transforms=['korobov3x3']):
+                 use_light_Pak=True, use_dreadnaut=False, use_Pak=True, processes=1, pylink_qmc_transforms=['korobov3x3']):
     r'''
     Decompose, subtract and expand an expression.
     Return it as c++ package.
