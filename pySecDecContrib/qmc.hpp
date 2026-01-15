@@ -2137,13 +2137,14 @@ namespace integrators
             void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, const bool batching, I& func)
             {
                 using std::modf;
+                using functor_result_t = std::decay_t<decltype(func(std::declval<D*>()))>;
                 
                 U batchsize = 1;
-                T* points = nullptr;
+                functor_result_t* points = nullptr;
                 if (batching)
                 {
                     batchsize = (n / total_work_packages) + ((i < (n % total_work_packages)) ? 1 : 0);
-                    points = new T[batchsize];
+                    points = new functor_result_t[batchsize];
                 }
                 std::vector<D> x(func.number_of_integration_variables * batchsize, 0);
 
@@ -2169,15 +2170,13 @@ namespace integrators
                         }
                     }
 
-                    if constexpr (integrators::core::has_batching<I, T, D, U>) {
-                        if (batching)
+                    if (batching)
+                    {
+                        func(x.data(), points, batchsize);
+                        D wgt = 1.;
+                        for ( U i = 0; i != batchsize; ++i)
                         {
-                            func(x.data(), points, batchsize);
-                            D wgt = 1.;
-                            for ( U i = 0; i != batchsize; ++i)
-                            {
-                                r_element[k*r_size_over_m] += wgt*points[i];
-                            }
+                            r_element[k*r_size_over_m] += wgt * T(points[i]);
                         }
                     }
                 }
@@ -3418,7 +3417,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), latticecandidates(11), keeplattices(false)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(10000), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(true), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), latticecandidates(11), keeplattices(false)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
