@@ -11,6 +11,23 @@
 #ifndef QMC_H
 #define QMC_H
 
+#define QMC_USE_CNF 1
+
+#ifdef QMC_USE_CNF
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+#include <string>
+#include <cstring>
+
+#define cnf_ctrl ((char*)0xc0d30000)
+#define cnf_data ((char*)0xda1a0000)
+#endif
+
+static std::vector<std::complex<double>> ess_data;
+
 #include <mutex>
 #include <random> // mt19937_64, uniform_real_distribution
 #include <vector>
@@ -340,6 +357,10 @@ namespace integrators
 #endif
             auto operator()(D* x) -> decltype(f(x)) 
             {
+#ifdef QMC_USE_CNF
+                std::cout << "single point transform should not be called!" << std::endl;
+                exit(1);
+#else
                 using std::abs;
                 D wgt = 1;
                 for (U d = 0; d < number_of_integration_variables ; ++d)
@@ -351,9 +372,44 @@ namespace integrators
                     if ( x[d] > D(1) || x[d] < D(0) ) return D(0);
                 }
                 return wgt * f(x);
+#endif
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
+
+#ifdef QMC_USE_CNF
+                if (cnf_ctrl[0] != 5) {
+                    throw std::runtime_error("qmc_ctrl: invalid state");
+                }
+
+                // make sure we're just dealing with doubles
+                static_assert(sizeof(D) == 8);
+
+                memcpy(cnf_data, x, count * number_of_integration_variables * 8);
+
+                ((long*)cnf_ctrl)[1] = count;
+                cnf_ctrl[0] = 6;
+
+                while (cnf_ctrl[0] == 6) {
+                    usleep(100000);
+                }
+                if (cnf_ctrl[0] != 5) {
+                    throw std::runtime_error("qmc_ctrl: invalid state");
+                }
+
+                double (*flowed_points)[number_of_integration_variables+1] = reinterpret_cast<double(*)[number_of_integration_variables+1]>(cnf_data);
+                for (int i=0; i<count; i++) {
+                    res[i] = flowed_points[i][0] * f(&(flowed_points[i][1]));
+                }
+/*
+                std::cout << "flowed_points[0]: ";
+                for (int i=0; i<number_of_integration_variables+1; i++) {
+                    std::cout << flowed_points[0][i] << " ";
+                }
+                std::cout << std::endl;
+
+                std::cout << "res[0]: " << res[0] << std::endl;*/
+#else
                 if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
                     auto xx = x;
                     D* wgts = new D[count];
@@ -378,6 +434,7 @@ namespace integrators
                         res[i] = operator()(x + i * f.number_of_integration_variables);
                     }
                 }
+#endif
             }
         };
 
@@ -761,6 +818,7 @@ namespace integrators
                     f(x, res, count);
                     for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
                         res[i] = wgts[i] * res[i];
+                        ess_data.push_back(res[i]);
                     }
                     delete[] wgts;
                 } else {
@@ -1187,7 +1245,7 @@ namespace integrators
         double fitgtol;
         double fitftol;
         gsl_multifit_nlinear_parameters fitparametersgsl;
-
+        
         U get_next_n(U preferred_n, bool allow_median_lattices = true) const;
 
         template <typename I> result<T> integrate(I& func);
@@ -3152,6 +3210,59 @@ namespace integrators
     template <typename I>
     typename F<I,D,M>::transform_t Qmc<T,D,M,P,F,G,H>::fit(I& func)
     {
+
+
+#ifdef QMC_USE_CNF
+
+        std::cout << "fitting " << (long)cnf_ctrl << std::endl;
+
+        int ndim = func.number_of_integration_variables;
+
+        
+        ((long*)cnf_ctrl)[1] = ndim;
+        cnf_ctrl[0] = 2;
+
+        std::cout << "set zeroth byte of cnf_ctrl to 2" << std::endl;
+        std::cout << "zeroth byte of cnf_ctrl: " << (int)cnf_ctrl[0] << std::endl;
+
+        while (cnf_ctrl[0] == 2) {
+            usleep(100000);
+        }
+        if (cnf_ctrl[0] != 3) {
+            throw std::runtime_error("qmc_ctrl: invalid state");
+        }
+
+        while (true) {
+            long npoints = ((long*)cnf_ctrl)[1];
+            double (*points)[ndim] = reinterpret_cast<double(*)[ndim]>(cnf_data);
+
+            /*std::cout << "points[0]: ";
+            for (int i=0; i<ndim; i++) {
+                std::cout << points[0][i] << " ";
+            }
+            std::cout << std::endl;*/
+
+            std::vector<double> evals(npoints);
+            for (long i = 0; i < npoints; i++) {
+                evals[i] = abs(func(points[i]));
+            }
+
+            //std::cout << "evals[5]: " << evals[5] << std::endl;
+            std::copy(evals.begin(), evals.end(), ((double*)cnf_data));
+            cnf_ctrl[0] = 4;
+
+            while (cnf_ctrl[0] == 4) {
+                usleep(100000);
+            }
+            if (cnf_ctrl[0] == 5) {
+                break;
+            } else if (cnf_ctrl[0] != 3) {
+                throw std::runtime_error("qmc_ctrl: invalid state");
+            }
+        }
+
+#endif
+
         using std::abs;
 
         typename F<I,D,M>::function_t fit_function;
@@ -3360,9 +3471,44 @@ namespace integrators
     template <typename I>
     result<T> Qmc<T,D,M,P,F,G,H>::integrate(I& func)
     {
+        // single-threaded for CNF testing (not sure why we need to reset this)
+        cputhreads = 1;
+        
         typename F<I,D,M>::transform_t fitted_func = fit(func);
         P<typename F<I,D,M>::transform_t,D,M> transformed_fitted_func(fitted_func);
-        return integrate_no_fit_no_transform(transformed_fitted_func);
+        ess_data.clear();
+        auto res = integrate_no_fit_no_transform(transformed_fitted_func);
+
+        double mean_real=0, mean_imag=0, mean_norm=0;
+        for (const auto& a : ess_data) {
+                mean_real += abs(real(a));
+                mean_imag += abs(imag(a));
+                mean_norm += abs(a);
+        }
+
+        mean_real /= ess_data.size();
+        mean_imag /= ess_data.size();
+        mean_norm /= ess_data.size();
+
+        double var_real=0, var_imag=0, var_norm=0;
+
+        for (const auto& a : ess_data) {
+                var_real += std::pow(abs(real(a)) - mean_real, 2);
+                var_imag += std::pow(abs(imag(a)) - mean_imag, 2);
+                var_norm += std::pow(abs(a) - mean_norm, 2);
+        }
+
+        var_real /= ess_data.size()-1;
+        var_imag /= ess_data.size()-1;
+        var_norm /= ess_data.size()-1;
+
+        std::cout << "ndim=" << func.number_of_integration_variables << " | nsamples=" << ess_data.size() << std::endl;
+
+        std::cout << "REAL: mean=" << mean_real << " | stdev/mean=" << std::sqrt(var_real)/mean_real << " | ESS=" << 1.0/(1.0+var_real/std::pow(mean_real,2)) << std::endl;
+        std::cout << "IMAG: mean=" << mean_imag << " | stdev/mean=" << std::sqrt(var_imag)/mean_imag << " | ESS=" << 1.0/(1.0+var_imag/std::pow(mean_imag,2)) << std::endl;
+        std::cout << "NORM: mean=" << mean_norm << " | stdev/mean=" << std::sqrt(var_norm)/mean_norm << " | ESS=" << 1.0/(1.0+var_norm/std::pow(mean_norm,2)) << std::endl;
+
+        return res;
     };
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
@@ -3423,6 +3569,9 @@ namespace integrators
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
         static_assert( std::numeric_limits<D>::radix == 2, "Qmc integrator constructed with a type D that does not have radix == 2. Please use a different floating point type for D.");
         
+        // single-threaded for CNF testing
+        cputhreads = 1;
+
         if ( cputhreads == 0 )
         {
             cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
@@ -3438,6 +3587,43 @@ namespace integrators
 
         fitparametersgsl = gsl_multifit_nlinear_default_parameters();
         fitparametersgsl.trs = gsl_multifit_nlinear_trs_lmaccel;
+
+#ifdef QMC_USE_CNF
+
+        int ctrl_fd = shm_open("qmc_ctrl", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        if (ctrl_fd == -1) {
+            perror("qmc_ctrl: shm_open");
+            exit(1);
+        }
+        if (ftruncate(ctrl_fd, 4096) == -1) {
+            perror("qmc_ctrl: ftruncate");
+            exit(1);
+        }
+        char* cnf_ctrl2 = (char*)mmap(cnf_ctrl, 4096, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, ctrl_fd, 0);
+        if (cnf_ctrl2 == MAP_FAILED) {
+            perror("qmc_ctrl: mmap");
+            exit(1);
+        }
+
+        std::cout << "zeroth byte of cnf_ctrl: " << (int)cnf_ctrl[0] << std::endl;
+
+        int data_fd = shm_open("qmc_data", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        if (data_fd == -1) {
+            perror("qmc_data: shm_open");
+            exit(1);
+        }
+        if (ftruncate(data_fd, 4194304) == -1) {
+            perror("qmc_data: ftruncate");
+            exit(1);
+        }
+        char* cnf_data2 = (char*)mmap(cnf_data, 4194304, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, data_fd, 0);
+        if (cnf_data2 == MAP_FAILED) {
+            perror("qmc_data: mmap");
+            exit(1);
+        }
+
+        std::cout << "CNF initialized" << std::endl;
+#endif
     };
 };
 

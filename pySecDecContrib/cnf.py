@@ -8,10 +8,15 @@ import torch
 from torch.distributions.uniform import Uniform
 from torchdiffeq import odeint
 
-cuda = torch.device('cuda')
+import matplotlib.pyplot as plt
 
-def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_size=100, num_epochs=1, cutoff_ess=0.99):
+cuda = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+done_already2 = False
+
+def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_size=10, num_epochs=10, cutoff_ess=0.99):
+    global done_already2
     torch.manual_seed(0)
     
     if hidden_width is None:
@@ -30,7 +35,7 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
           y *= torch.sin(x * torch.pi)
           return y
 
-    flow = CNF().to(cuda)
+    flow = CNF().double().to(cuda)
     flow_jac = torch.func.jacrev(flow,1)
 
     def flow_div(t, state):
@@ -48,30 +53,45 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
     for batch in range(num_epochs * epoch_size):
         optim.zero_grad()
         
-        x = source_dist.sample([batch_size]).to(cuda)
+        x = source_dist.sample([batch_size]).double().to(cuda)
+
+        # perform korobov transform
+        p = x**3 * (1-x) ** 3 # for each dimension!
+        p = p.prod(dim=1)
+        x = x**4 * (-20.0*x**3 + 70.0*x**2 - 84.0*x + 35.0)
+        if not done_already2:
+            done_already2 = True
+            plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
+            plt.savefig("x.png")
+
+
         res = odeint(flow_div_batched, (x,torch.zeros([batch_size]).to(cuda)), torch.tensor([0.,1.]).to(cuda), atol=1e-4)
         y, lnJ = res[0][1], res[1][1]
-        
+        y = torch.clamp(y, 0, 1)
+
         eval_points = np.ndarray((batch_size, ndim), np.float64, buffer=data.buf)
         eval_points[:,:] = y.cpu().detach().numpy()[:,:]
+        #print("points[0]: ", eval_points[0])
 
-        ctrl.buf[0] = 3
         ctrl.buf[8:16] = batch_size.to_bytes(8, byteorder="little")
+        ctrl.buf[0] = 3
 
         while ctrl.buf[0] == 3:
             sleep(0.1)
-
+        
         if ctrl.buf[0] != 4:
             print("invalid state", ctrl.buf[0])
             exit(1)
 
         target_samples = torch.tensor(np.ndarray((batch_size), np.float64, buffer=data.buf)).to(cuda)
+        #print("target_samples[5]: ", target_samples[5].cpu().detach().numpy())
 
         sample_losses = -lnJ - torch.log(target_samples)
+        sample_losses -= torch.log(p) # add korobov transform loss
         batch_loss = torch.mean(sample_losses)
         batch_losses.append(batch_loss.cpu().detach().numpy())
 
-        prop = target_samples / torch.exp(-lnJ)
+        prop = torch.exp(-sample_losses) #target_samples / torch.exp(-lnJ)
         ess = torch.mean(prop)**2/torch.mean(prop**2)
         batch_ess.append(ess.cpu().detach().numpy())
 
@@ -94,10 +114,13 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
     
     return forward_points, batch_losses
 
+done_already = False
 
 def run():
-    if ctrl.buf[1] != 2:
-        print("invalid state", ctrl.buf[1])
+
+    global done_already
+    if ctrl.buf[0] != 2:
+        print("invalid state", ctrl.buf[0])
         exit(1)
 
     ndim = int.from_bytes(ctrl.buf[8:16], byteorder="little")
@@ -106,6 +129,7 @@ def run():
     forward_points, batch_losses = train_cnf(ndim)
 
     while True:
+
         ctrl.buf[0] = 5
         while ctrl.buf[0] == 5:
             sleep(0.1)
@@ -120,8 +144,20 @@ def run():
         x = torch.tensor(np.ndarray((n, ndim), np.float64, buffer=data.buf)).to(cuda)
         y, p = forward_points(x)
 
+        # clip y to be between 0 and 1
+        y = torch.clamp(y, 0, 1)
+
+        if not done_already:
+            done_already = True
+
+            plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
+            plt.savefig("x2.png")
+
+            plt.hist(y.cpu().detach().numpy()[:,0], bins=100)
+            plt.savefig("y2.png")
+
         res = np.ndarray((n, ndim+1), np.float64, buffer=data.buf)
-        res[:,:] = np.concatenate((y.cpu().detach().numpy()[:,:], p.cpu().detach().numpy()[:,None]), axis=1)
+        res[:,:] = np.concatenate((1.0/p.cpu().detach().numpy()[:,None], y.cpu().detach().numpy()[:,:]), axis=1)
 
 
 def main():
@@ -131,6 +167,8 @@ def main():
     data = shared_memory.SharedMemory("qmc_data", create=True, size=4194304) # 4MB
 
     ctrl.buf[0] = 1
+
+    print("ready")
 
     while ctrl.buf[0] == 1:
         sleep(0.1)
