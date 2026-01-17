@@ -391,7 +391,7 @@ namespace integrators
                 cnf_ctrl[0] = 6;
 
                 while (cnf_ctrl[0] == 6) {
-                    usleep(100000);
+                    usleep(10000);
                 }
                 if (cnf_ctrl[0] != 5) {
                     throw std::runtime_error("qmc_ctrl: invalid state");
@@ -399,7 +399,7 @@ namespace integrators
 
                 double (*flowed_points)[number_of_integration_variables+1] = reinterpret_cast<double(*)[number_of_integration_variables+1]>(cnf_data);
                 for (int i=0; i<count; i++) {
-                    res[i] = flowed_points[i][0] * f(&(flowed_points[i][1]));
+                    res[i] = f(&(flowed_points[i][1])) / flowed_points[i][0];
                 }
 /*
                 std::cout << "flowed_points[0]: ";
@@ -3214,19 +3214,13 @@ namespace integrators
 
 #ifdef QMC_USE_CNF
 
-        std::cout << "fitting " << (long)cnf_ctrl << std::endl;
-
         int ndim = func.number_of_integration_variables;
-
         
         ((long*)cnf_ctrl)[1] = ndim;
         cnf_ctrl[0] = 2;
 
-        std::cout << "set zeroth byte of cnf_ctrl to 2" << std::endl;
-        std::cout << "zeroth byte of cnf_ctrl: " << (int)cnf_ctrl[0] << std::endl;
-
         while (cnf_ctrl[0] == 2) {
-            usleep(100000);
+            usleep(10000);
         }
         if (cnf_ctrl[0] != 3) {
             throw std::runtime_error("qmc_ctrl: invalid state");
@@ -3252,7 +3246,7 @@ namespace integrators
             cnf_ctrl[0] = 4;
 
             while (cnf_ctrl[0] == 4) {
-                usleep(100000);
+                usleep(10000);
             }
             if (cnf_ctrl[0] == 5) {
                 break;
@@ -3563,7 +3557,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(10000), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(true), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), latticecandidates(11), keeplattices(false)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(12000), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(true), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), latticecandidates(11), keeplattices(false)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

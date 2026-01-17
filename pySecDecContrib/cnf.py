@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from multiprocessing import shared_memory
 from time import sleep
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 cuda = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-done_already2 = False
+#done_already2 = False
 
 def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_size=10, num_epochs=10, cutoff_ess=0.99):
     global done_already2
@@ -49,6 +49,8 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
     
     batch_losses = []
     batch_ess = []
+    best_ess = 0.
+    best_flow_state = None
 
     for batch in range(num_epochs * epoch_size):
         optim.zero_grad()
@@ -59,11 +61,11 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
         p = x**3 * (1-x) ** 3 # for each dimension!
         p = p.prod(dim=1)
         x = x**4 * (-20.0*x**3 + 70.0*x**2 - 84.0*x + 35.0)
-        if not done_already2:
-            done_already2 = True
-            plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
-            plt.savefig("x.png")
 
+        #if not done_already2:
+        #    done_already2 = True
+        #    plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
+        #    plt.savefig("x.png")
 
         res = odeint(flow_div_batched, (x,torch.zeros([batch_size]).to(cuda)), torch.tensor([0.,1.]).to(cuda), atol=1e-4)
         y, lnJ = res[0][1], res[1][1]
@@ -77,7 +79,7 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
         ctrl.buf[0] = 3
 
         while ctrl.buf[0] == 3:
-            sleep(0.1)
+            sleep(0.01)
         
         if ctrl.buf[0] != 4:
             print("invalid state", ctrl.buf[0])
@@ -95,6 +97,11 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
         ess = torch.mean(prop)**2/torch.mean(prop**2)
         batch_ess.append(ess.cpu().detach().numpy())
 
+        ess_val = float(ess.detach().cpu().item())
+        if np.isfinite(ess_val) and ess_val > best_ess:
+            best_ess = ess_val
+            best_flow_state = {k: v.detach().cpu().clone() for k, v in flow.state_dict().items()}
+
         if batch_ess[-1] < cutoff_ess:
             batch_loss.backward()
             optim.step()
@@ -106,6 +113,10 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
 
             if batch_ess[-1] >= cutoff_ess:
                 break
+
+    if best_flow_state is not None:
+        flow.load_state_dict(best_flow_state)
+        print(f"Best ESS={best_ess}")
 
     def forward_points(x):
         with torch.no_grad():
@@ -132,7 +143,7 @@ def run():
 
         ctrl.buf[0] = 5
         while ctrl.buf[0] == 5:
-            sleep(0.1)
+            sleep(0.01)
 
         if ctrl.buf[0] == 2:
             return run() # restart
@@ -144,20 +155,19 @@ def run():
         x = torch.tensor(np.ndarray((n, ndim), np.float64, buffer=data.buf)).to(cuda)
         y, p = forward_points(x)
 
-        # clip y to be between 0 and 1
         y = torch.clamp(y, 0, 1)
 
         if not done_already:
             done_already = True
 
-            plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
-            plt.savefig("x2.png")
+            #plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
+            #plt.savefig("x2.png")
 
             plt.hist(y.cpu().detach().numpy()[:,0], bins=100)
             plt.savefig("y2.png")
 
         res = np.ndarray((n, ndim+1), np.float64, buffer=data.buf)
-        res[:,:] = np.concatenate((1.0/p.cpu().detach().numpy()[:,None], y.cpu().detach().numpy()[:,:]), axis=1)
+        res[:,:] = np.concatenate((p.cpu().detach().numpy()[:,None], y.cpu().detach().numpy()[:,:]), axis=1)
 
 
 def main():
@@ -171,7 +181,7 @@ def main():
     print("ready")
 
     while ctrl.buf[0] == 1:
-        sleep(0.1)
+        sleep(0.01)
 
     run()
 
