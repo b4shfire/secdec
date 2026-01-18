@@ -2,6 +2,7 @@
 
 from multiprocessing import shared_memory
 from time import sleep
+from datetime import datetime
 import numpy as np
 
 import torch
@@ -118,6 +119,20 @@ def train_cnf(ndim, hidden_width=None, learn_rate=5e-3, batch_size=10000, epoch_
         flow.load_state_dict(best_flow_state)
         print(f"Best ESS={best_ess}")
 
+    # plot loss and ESS
+    plt.clf()
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    ax1.set_xlabel("Batch")
+    ax1.set_ylabel("Loss")
+    ax2.set_ylabel("ESS")
+    #ax2.set_ylim(0,1)
+    x = np.arange(len(batch_losses))
+    ax1.plot(x, batch_losses)
+    ax2.plot(x, batch_ess, c="orange", label="ESS")
+    ax2.legend()
+    plt.savefig(f"loss_plots/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pdf")
+
     def forward_points(x):
         with torch.no_grad():
             res = odeint(flow_div_batched, (x,torch.zeros(x.shape[0]).to(cuda)), torch.tensor([0.,1.]).to(cuda), atol=1e-4)
@@ -162,7 +177,7 @@ def run():
 
             #plt.hist(x.cpu().detach().numpy()[:,0], bins=100)
             #plt.savefig("x2.png")
-
+            plt.clf()
             plt.hist(y.cpu().detach().numpy()[:,0], bins=100)
             plt.savefig("y2.png")
 
