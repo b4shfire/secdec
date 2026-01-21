@@ -6,12 +6,12 @@ import sympy as sp
 bubble1L = IntegralLibrary('bubble1L/bubble1L_pylink.so')
 
 # choose integrator
-bubble1L.use_Qmc()
+bubble1L.use_Qmc(verbosity=0, fitfunction='polysingular')
 
 # integrate
 result_without_prefactor, result_prefactor, result_with_prefactor = \
-    bubble1L(real_parameters=[3.0],
-          epsrel=1e-3, epsabs=1e-10, format="json")
+    bubble1L(real_parameters=[5.0, 1.0],
+          epsrel=1e-3, epsabs=1e-10, format="json", verbose=True)
 values = result_with_prefactor["sums"]["bubble1L"]
 
 # examples how to access individual orders

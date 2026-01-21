@@ -6,12 +6,12 @@ import sympy as sp
 box1L = IntegralLibrary('box1L/box1L_pylink.so')
 
 # choose integrator
-box1L.use_Qmc()
+box1L.use_Qmc(verbosity=0, fitfunction='polysingular')
 
 # integrate
 result_without_prefactor, result_prefactor, result_with_prefactor = \
     box1L(real_parameters=[4.0, -0.75, 1.25, 1.0],
-          epsrel=1e-3, epsabs=1e-10, format="json")
+          epsrel=1e-3, epsabs=1e-10, format="json", verbose=True)
 values = result_with_prefactor["sums"]["box1L"]
 
 # examples how to access individual orders

@@ -9,7 +9,8 @@ if __name__ == "__main__":
     triangle2L = IntegralLibrary('triangle2L/triangle2L_pylink.so')
 
     # choose integrator
-    triangle2L.use_Vegas()
+    #triangle2L.use_Vegas() LORIAN
+    triangle2L.use_Qmc(fitfunction='polysingular')
 
     # integrate
     str_integral_without_prefactor, str_prefactor, str_integral_with_prefactor = triangle2L(real_parameters=[9.0],complex_parameters=[1.0], verbose=True)
