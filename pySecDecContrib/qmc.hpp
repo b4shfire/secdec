@@ -13,7 +13,7 @@
 
 #define QMC_USE_CNF 1
 
-#ifdef QMC_USE_CNF
+#if QMC_USE_CNF
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -357,7 +357,7 @@ namespace integrators
 #endif
             auto operator()(D* x) -> decltype(f(x)) 
             {
-#ifdef QMC_USE_CNF
+#if QMC_USE_CNF
                 std::cout << "single point transform should not be called!" << std::endl;
                 exit(1);
 #else
@@ -377,7 +377,7 @@ namespace integrators
             void operator()(D* x, decltype(f(x))* res, U count)
             {
 
-#ifdef QMC_USE_CNF
+#if QMC_USE_CNF
                 if (cnf_ctrl[0] != 5) {
                     throw std::runtime_error("qmc_ctrl: invalid state");
                 }
@@ -3212,7 +3212,7 @@ namespace integrators
     {
 
 
-#ifdef QMC_USE_CNF
+#if QMC_USE_CNF
 
         int ndim = func.number_of_integration_variables;
         
@@ -3496,8 +3496,10 @@ namespace integrators
         var_imag /= ess_data.size()-1;
         var_norm /= ess_data.size()-1;
 
-        std::cout << "ndim=" << func.number_of_integration_variables << " | nsamples=" << ess_data.size() << std::endl;
+	std::vector<double> test_input(func.number_of_integration_variables, 0.5);
+	std::complex<double> test_output = func(test_input.data());
 
+        std::cout << "ndim=" << func.number_of_integration_variables << " | f(0.5)=" << test_output << " | nsamples=" << ess_data.size() << std::endl;
         std::cout << "REAL: mean=" << mean_real << " | stdev/mean=" << std::sqrt(var_real)/mean_real << " | ESS=" << 1.0/(1.0+var_real/std::pow(mean_real,2)) << std::endl;
         std::cout << "IMAG: mean=" << mean_imag << " | stdev/mean=" << std::sqrt(var_imag)/mean_imag << " | ESS=" << 1.0/(1.0+var_imag/std::pow(mean_imag,2)) << std::endl;
         std::cout << "NORM: mean=" << mean_norm << " | stdev/mean=" << std::sqrt(var_norm)/mean_norm << " | ESS=" << 1.0/(1.0+var_norm/std::pow(mean_norm,2)) << std::endl;
@@ -3582,7 +3584,7 @@ namespace integrators
         fitparametersgsl = gsl_multifit_nlinear_default_parameters();
         fitparametersgsl.trs = gsl_multifit_nlinear_trs_lmaccel;
 
-#ifdef QMC_USE_CNF
+#if QMC_USE_CNF
 
         int ctrl_fd = shm_open("qmc_ctrl", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         if (ctrl_fd == -1) {
