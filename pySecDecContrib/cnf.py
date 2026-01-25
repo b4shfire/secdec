@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-#from os import environ
-#environ["TORCH_LOGS"] = "recompiles"
+from os import environ
+ctrl_name = environ.get("QMC_CTRL_NAME", "qmc_ctrl")
+data_name = environ.get("QMC_DATA_NAME", "qmc_data")
+atol = float(environ.get("QMC_ATOL", "nan"))
 
 from multiprocessing import shared_memory
 from time import sleep
@@ -17,7 +19,7 @@ cuda = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 torch._dynamo.config.recompile_limit = 1000000
 torch._dynamo.config.accumulated_recompile_limit = 1000000
-
+torch.set_float32_matmul_precision('high')
 
 def train_cnf(ndim):
 
@@ -50,7 +52,7 @@ def train_cnf(ndim):
                 return (v(t, state[0]), torch.trace(jac(t, state[0])))
 
             self.forward = torch.vmap(v_div, (None, (0, None)))
-            self.forward = torch.compile(self.forward, dynamic=True)
+            #self.forward = torch.compile(self.forward, dynamic=True)
 
     flow = CNF().to(cuda, dtype=train_dtype)
     rng = np.random.default_rng(0)
@@ -127,6 +129,7 @@ def train_cnf(ndim):
     for i in range(1, len(times)):
         print(f"[Train] Time taken for {i}: {np.sum(times[i] - times[i-1])}")
 
+    """
     # plot loss and ESS
     plt.clf()
     fig, ax1 = plt.subplots()
@@ -140,13 +143,14 @@ def train_cnf(ndim):
     ax2.plot(x, batch_ess, c="orange", label="ESS")
     ax2.legend()
     plt.savefig(f"loss_plots/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pdf")
+    """
 
     # switch to doubles for evaluation
     flow = flow.to(cuda, dtype=eval_dtype)
 
     def forward_points(x):
         with torch.no_grad():
-            res = odeint(flow, (x,torch.zeros(x.shape[0]).to(cuda, dtype=eval_dtype)), torch.tensor([0.,1.]).to(cuda, dtype=eval_dtype), atol=1e-8, rtol=0)
+            res = odeint(flow, (x,torch.zeros(x.shape[0]).to(cuda, dtype=eval_dtype)), torch.tensor([0.,1.]).to(cuda, dtype=eval_dtype), atol=atol, rtol=0)
             return res[0][1], torch.exp(-res[1][1])
 
     return forward_points
@@ -203,8 +207,8 @@ def run():
 def main():
     global ctrl, data
 
-    ctrl = shared_memory.SharedMemory("qmc_ctrl", create=True, size=4096) # 4KB
-    data = shared_memory.SharedMemory("qmc_data", create=True, size=4194304) # 4MB
+    ctrl = shared_memory.SharedMemory(ctrl_name, create=True, size=4096) # 4KB
+    data = shared_memory.SharedMemory(data_name, create=True, size=4194304) # 4MB
 
     ctrl.buf[0] = 1
 

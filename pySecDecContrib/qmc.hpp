@@ -3586,6 +3586,15 @@ namespace integrators
 
 #if QMC_USE_CNF
 
+        const char* ctrl_name = getenv("QMC_CTRL_NAME");
+        if (ctrl_name == NULL) {
+            ctrl_name = "qmc_ctrl";
+        }
+        const char* data_name = getenv("QMC_DATA_NAME");
+        if (data_name == NULL) {
+            data_name = "qmc_data";
+        }
+
         int ctrl_fd = shm_open("qmc_ctrl", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         if (ctrl_fd == -1) {
             perror("qmc_ctrl: shm_open");
