@@ -378,6 +378,8 @@ namespace integrators
             {
 
 #if QMC_USE_CNF
+                const U ndim = number_of_integration_variables;
+
                 if (cnf_ctrl[0] != 5) {
                     throw std::runtime_error("qmc_ctrl: invalid state");
                 }
@@ -385,7 +387,7 @@ namespace integrators
                 // make sure we're just dealing with doubles
                 static_assert(sizeof(D) == 8);
 
-                memcpy(cnf_data, x, count * number_of_integration_variables * 8);
+                memcpy(cnf_data, x, count * ndim * 8);
 
                 ((long*)cnf_ctrl)[1] = count;
                 cnf_ctrl[0] = 6;
@@ -397,9 +399,10 @@ namespace integrators
                     throw std::runtime_error("qmc_ctrl: invalid state");
                 }
 
-                double (*flowed_points)[number_of_integration_variables+1] = reinterpret_cast<double(*)[number_of_integration_variables+1]>(cnf_data);
+                double (*flowed_points)[count][ndim+1] = reinterpret_cast<double(*)[count][ndim+1]>(cnf_data);
                 for (int i=0; i<count; i++) {
-                    res[i] = f(&(flowed_points[i][1])) / flowed_points[i][0];
+                    res[i].real(f(&(flowed_points[0][i][1])).real() / flowed_points[0][i][0]);
+                    res[i].imag(f(&(flowed_points[1][i][1])).imag() / flowed_points[1][i][0]);
                 }
 /*
                 std::cout << "flowed_points[0]: ";
@@ -3230,19 +3233,12 @@ namespace integrators
             long npoints = ((long*)cnf_ctrl)[1];
             double (*points)[ndim] = reinterpret_cast<double(*)[ndim]>(cnf_data);
 
-            /*std::cout << "points[0]: ";
-            for (int i=0; i<ndim; i++) {
-                std::cout << points[0][i] << " ";
-            }
-            std::cout << std::endl;*/
-
-            std::vector<double> evals(npoints);
+            std::vector<std::complex<double>> evals(npoints);
             for (long i = 0; i < npoints; i++) {
-                evals[i] = abs(func(points[i]));
+                evals[i] = func(points[i]);
             }
 
-            //std::cout << "evals[5]: " << evals[5] << std::endl;
-            std::copy(evals.begin(), evals.end(), ((double*)cnf_data));
+            std::copy(evals.begin(), evals.end(), ((std::complex<double>*)cnf_data));
             cnf_ctrl[0] = 4;
 
             while (cnf_ctrl[0] == 4) {
@@ -3254,7 +3250,6 @@ namespace integrators
                 throw std::runtime_error("qmc_ctrl: invalid state");
             }
         }
-
 #endif
 
         using std::abs;
@@ -3595,7 +3590,7 @@ namespace integrators
             data_name = "qmc_data";
         }
 
-        int ctrl_fd = shm_open("qmc_ctrl", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        int ctrl_fd = shm_open(ctrl_name, O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         if (ctrl_fd == -1) {
             perror("qmc_ctrl: shm_open");
             exit(1);
@@ -3612,7 +3607,7 @@ namespace integrators
 
         std::cout << "zeroth byte of cnf_ctrl: " << (int)cnf_ctrl[0] << std::endl;
 
-        int data_fd = shm_open("qmc_data", O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        int data_fd = shm_open(data_name, O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         if (data_fd == -1) {
             perror("qmc_data: shm_open");
             exit(1);
