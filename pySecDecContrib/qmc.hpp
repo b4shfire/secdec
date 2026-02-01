@@ -401,17 +401,10 @@ namespace integrators
 
                 double (*flowed_points)[count][ndim+1] = reinterpret_cast<double(*)[count][ndim+1]>(cnf_data);
                 for (int i=0; i<count; i++) {
-                    res[i].real(f(&(flowed_points[0][i][1])).real() / flowed_points[0][i][0]);
-                    res[i].imag(f(&(flowed_points[1][i][1])).imag() / flowed_points[1][i][0]);
+                    //res[i].real(f(&(flowed_points[0][i][1])).real() / flowed_points[0][i][0]);
+                    //res[i].imag(f(&(flowed_points[1][i][1])).imag() / flowed_points[1][i][0]);
+                    res[i] = f(&(flowed_points[0][i][1])) / flowed_points[0][i][0];
                 }
-/*
-                std::cout << "flowed_points[0]: ";
-                for (int i=0; i<number_of_integration_variables+1; i++) {
-                    std::cout << flowed_points[0][i] << " ";
-                }
-                std::cout << std::endl;
-
-                std::cout << "res[0]: " << res[0] << std::endl;*/
 #else
                 if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
                     auto xx = x;
