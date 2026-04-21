@@ -47,6 +47,13 @@
                                                                 ::integrators::transforms::None::type, \
                                                                 INTEGRAL_NAME::cuda_integrand_t, \
                                                                 ::integrators::fitfunctions::PolySingular::type \
+                                                        >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                                INTEGRAL_NAME::integrand_return_t, \
+                                                                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                ::integrators::transforms::None::type, \
+                                                                INTEGRAL_NAME::cuda_integrand_t, \
+                                                                ::integrators::fitfunctions::Cnf::type \
                                                         >;
     #define EXTERN_BAKER_QMC_SEPARATE() \
         extern template class secdecutil::integrators::Qmc< \
@@ -68,6 +75,13 @@
                                                             ::integrators::transforms::Baker::type, \
                                                             INTEGRAL_NAME::cuda_integrand_t, \
                                                             ::integrators::fitfunctions::PolySingular::type \
+                                                        >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                            INTEGRAL_NAME::integrand_return_t, \
+                                                            INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                            ::integrators::transforms::Baker::type, \
+                                                            INTEGRAL_NAME::cuda_integrand_t, \
+                                                            ::integrators::fitfunctions::Cnf::type \
                                                         >;
     #define EXTERN_KOROBOV_QMC_SEPARATE(KOROBOVDEGREE1,KOROBOVDEGREE2) \
         extern template class secdecutil::integrators::Qmc< \
@@ -90,6 +104,13 @@
                                                                ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
                                                                INTEGRAL_NAME::cuda_integrand_t, \
                                                                ::integrators::fitfunctions::PolySingular::type \
+                                                          >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                               INTEGRAL_NAME::integrand_return_t, \
+                                                               INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                               ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                                                               INTEGRAL_NAME::cuda_integrand_t, \
+                                                               ::integrators::fitfunctions::Cnf::type \
                                                           >;
     #define EXTERN_SIDI_QMC_SEPARATE(SIDIDEGREE) \
         extern template class secdecutil::integrators::Qmc< \
@@ -112,6 +133,13 @@
                                                                ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                                                                INTEGRAL_NAME::cuda_integrand_t, \
                                                                ::integrators::fitfunctions::PolySingular::type \
+                                                          >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                               INTEGRAL_NAME::integrand_return_t, \
+                                                               INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                               ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                                                               INTEGRAL_NAME::cuda_integrand_t, \
+                                                               ::integrators::fitfunctions::Cnf::type \
                                                           >;
     #if %(name)s_number_of_sectors != 1
         #define EXTERN_NONE_QMC() \
@@ -135,6 +163,13 @@
                                                                     ::integrators::transforms::None::type, \
                                                                     INTEGRAL_NAME::cuda_together_integrand_t, \
                                                                     ::integrators::fitfunctions::PolySingular::type \
+                                                            >; \
+            extern template class secdecutil::integrators::Qmc< \
+                                                                    INTEGRAL_NAME::integrand_return_t, \
+                                                                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                    ::integrators::transforms::None::type, \
+                                                                    INTEGRAL_NAME::cuda_together_integrand_t, \
+                                                                    ::integrators::fitfunctions::Cnf::type \
                                                             >;
         #define EXTERN_BAKER_QMC() \
             EXTERN_BAKER_QMC_SEPARATE()
@@ -157,6 +192,13 @@
                                                             ::integrators::transforms::Baker::type, \
                                                             INTEGRAL_NAME::cuda_together_integrand_t, \
                                                             ::integrators::fitfunctions::PolySingular::type \
+                                                        >; \
+            extern template class secdecutil::integrators::Qmc< \
+                                                            INTEGRAL_NAME::integrand_return_t, \
+                                                            INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                            ::integrators::transforms::Baker::type, \
+                                                            INTEGRAL_NAME::cuda_together_integrand_t, \
+                                                            ::integrators::fitfunctions::Cnf::type \
                                                         >;
         #define EXTERN_KOROBOV_QMC(KOROBOVDEGREE1,KOROBOVDEGREE2) \
             EXTERN_KOROBOV_QMC_SEPARATE(KOROBOVDEGREE1,KOROBOVDEGREE2) \
@@ -180,6 +222,13 @@
                                                                    ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
                                                                    INTEGRAL_NAME::cuda_together_integrand_t, \
                                                                    ::integrators::fitfunctions::PolySingular::type \
+                                                              >; \
+            extern template class secdecutil::integrators::Qmc< \
+                                                                   INTEGRAL_NAME::integrand_return_t, \
+                                                                   INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                   ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                                                                   INTEGRAL_NAME::cuda_together_integrand_t, \
+                                                                   ::integrators::fitfunctions::Cnf::type \
                                                               >;
         #define EXTERN_SIDI_QMC(SIDIDEGREE) \
             EXTERN_SIDI_QMC_SEPARATE(SIDIDEGREE) \
@@ -203,6 +252,13 @@
                                                                    ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                                                                    INTEGRAL_NAME::cuda_together_integrand_t, \
                                                                    ::integrators::fitfunctions::PolySingular::type \
+                                                              >; \
+            extern template class secdecutil::integrators::Qmc< \
+                                                                   INTEGRAL_NAME::integrand_return_t, \
+                                                                   INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                   ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                                                                   INTEGRAL_NAME::cuda_together_integrand_t, \
+                                                                   ::integrators::fitfunctions::Cnf::type \
                                                               >;
     #else
         #define EXTERN_NONE_QMC() EXTERN_NONE_QMC_SEPARATE()
@@ -231,6 +287,13 @@
                                                                 ::integrators::transforms::None::type, \
                                                                 INTEGRAL_NAME::integrand_t, \
                                                                 ::integrators::fitfunctions::PolySingular::type \
+                                                        >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                                INTEGRAL_NAME::integrand_return_t, \
+                                                                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                ::integrators::transforms::None::type, \
+                                                                INTEGRAL_NAME::integrand_t, \
+                                                                ::integrators::fitfunctions::Cnf::type \
                                                         >;
     #define EXTERN_BAKER_QMC() \
         extern template class secdecutil::integrators::Qmc< \
@@ -252,6 +315,13 @@
                                                         ::integrators::transforms::Baker::type, \
                                                         INTEGRAL_NAME::integrand_t, \
                                                         ::integrators::fitfunctions::PolySingular::type \
+                                                    >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                        INTEGRAL_NAME::integrand_return_t, \
+                                                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                        ::integrators::transforms::Baker::type, \
+                                                        INTEGRAL_NAME::integrand_t, \
+                                                        ::integrators::fitfunctions::Cnf::type \
                                                     >;
     #define EXTERN_KOROBOV_QMC(KOROBOVDEGREE1,KOROBOVDEGREE2) \
         extern template class secdecutil::integrators::Qmc< \
@@ -274,6 +344,13 @@
                                                                ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
                                                                INTEGRAL_NAME::integrand_t, \
                                                                ::integrators::fitfunctions::PolySingular::type \
+                                                          >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                               INTEGRAL_NAME::integrand_return_t, \
+                                                               INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                               ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                                                               INTEGRAL_NAME::integrand_t, \
+                                                               ::integrators::fitfunctions::Cnf::type \
                                                           >;
     #define EXTERN_SIDI_QMC(SIDIDEGREE) \
         extern template class secdecutil::integrators::Qmc< \
@@ -296,6 +373,13 @@
                                                                ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                                                                INTEGRAL_NAME::integrand_t, \
                                                                ::integrators::fitfunctions::PolySingular::type \
+                                                          >; \
+        extern template class secdecutil::integrators::Qmc< \
+                                                               INTEGRAL_NAME::integrand_return_t, \
+                                                               INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                               ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                                                               INTEGRAL_NAME::integrand_t, \
+                                                               ::integrators::fitfunctions::Cnf::type \
                                                           >;
 #endif
 
@@ -415,7 +499,8 @@ enum qmc_fitfunction_t : int
     default_fitfunction = 0,
 
     no_fit = -1,
-    polysingular = 1
+    polysingular = 1,
+    cnf = 2
 };
 enum qmc_generatingvectors_t : int
 {
@@ -439,6 +524,9 @@ enum qmc_generatingvectors_t : int
         } else if (fitfunction_id == polysingular) { \
             auto integrator = new secdecutil::integrators::Qmc<INTEGRAL_NAME::integrand_return_t,INTEGRAL_NAME::maximal_number_of_integration_variables,::integrators::transforms::None::type,INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME,::integrators::fitfunctions::PolySingular::type>; \
             QMC_RETURN_STATEMENT \
+        } else if (fitfunction_id == cnf) { \
+            auto integrator = new secdecutil::integrators::Qmc<INTEGRAL_NAME::integrand_return_t,INTEGRAL_NAME::maximal_number_of_integration_variables,::integrators::transforms::None::type,INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME,::integrators::fitfunctions::Cnf::type>; \
+            QMC_RETURN_STATEMENT \
         } else { \
             throw std::invalid_argument("Trying to allocate \"secdecutil::Qmc\" with unregistered \"fitfunction_id\" (" + std::to_string(fitfunction_id) + ")."); \
         } \
@@ -454,6 +542,9 @@ enum qmc_generatingvectors_t : int
             QMC_RETURN_STATEMENT \
         } else if (fitfunction_id == polysingular) { \
             auto integrator = new secdecutil::integrators::Qmc<INTEGRAL_NAME::integrand_return_t,INTEGRAL_NAME::maximal_number_of_integration_variables,::integrators::transforms::Baker::type,INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME,::integrators::fitfunctions::PolySingular::type>; \
+            QMC_RETURN_STATEMENT \
+        } else if (fitfunction_id == cnf) { \
+            auto integrator = new secdecutil::integrators::Qmc<INTEGRAL_NAME::integrand_return_t,INTEGRAL_NAME::maximal_number_of_integration_variables,::integrators::transforms::Baker::type,INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME,::integrators::fitfunctions::Cnf::type>; \
             QMC_RETURN_STATEMENT \
         } else { \
             throw std::invalid_argument("Trying to allocate \"secdecutil::Qmc\" with unregistered \"fitfunction_id\" (" + std::to_string(fitfunction_id) + ")."); \
@@ -488,6 +579,15 @@ enum qmc_generatingvectors_t : int
                                                                   ::integrators::fitfunctions::PolySingular::type \
                                                               >; \
             QMC_RETURN_STATEMENT \
+        } else if (fitfunction_id == cnf) { \
+            auto integrator = new secdecutil::integrators::Qmc< \
+                                                                  INTEGRAL_NAME::integrand_return_t, \
+                                                                  INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                  ::integrators::transforms::Korobov<KOROBOVDEGREE1, KOROBOVDEGREE2>::type, \
+                                                                  INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME, \
+                                                                  ::integrators::fitfunctions::Cnf::type \
+                                                              >; \
+            QMC_RETURN_STATEMENT \
         } else { \
             throw std::invalid_argument("Trying to allocate \"secdecutil::Qmc\" with unregistered \"fitfunction_id\" (" + std::to_string(fitfunction_id) + ")."); \
         } \
@@ -519,6 +619,15 @@ enum qmc_generatingvectors_t : int
                                                                   ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                                                                   INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME, \
                                                                   ::integrators::fitfunctions::PolySingular::type \
+                                                              >; \
+            QMC_RETURN_STATEMENT \
+        } else if (fitfunction_id == cnf) { \
+            auto integrator = new secdecutil::integrators::Qmc< \
+                                                                  INTEGRAL_NAME::integrand_return_t, \
+                                                                  INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                                                                  ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                                                                  INTEGRAL_NAME::QMC_INTEGRAND_TYPENAME, \
+                                                                  ::integrators::fitfunctions::Cnf::type \
                                                               >; \
             QMC_RETURN_STATEMENT \
         } else { \

@@ -366,13 +366,15 @@ for i in range(1,7):
 #     default_fitfunction = 0,
 #
 #     none = -1,
-#     polysingular = 1
+#     polysingular = 1,
+#     cnf = 2
 # };
 known_qmc_fitfunctions = dict(
     default = 0,
 
     none = -1,
-    polysingular = 1
+    polysingular = 1,
+    cnf = 2
 )
 
 # assuming

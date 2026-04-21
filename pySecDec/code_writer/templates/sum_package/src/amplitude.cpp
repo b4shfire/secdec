@@ -139,6 +139,31 @@ namespace %(name)s
                     deformation_parameters_minimum, \
                     deformation_parameters_decrease_factor \
                 ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::None::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::None::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
+                    >&>(*integrator) \
+                    ,number_of_presamples, \
+                    deformation_parameters_maximum, \
+                    deformation_parameters_minimum, \
+                    deformation_parameters_decrease_factor \
+                ); \
             }
     
         #define DYNAMIC_CAST_INTEGRATOR_BAKER_QMC() \
@@ -210,6 +235,31 @@ namespace %(name)s
                         ::integrators::transforms::Baker::type, \
                         INTEGRAL_NAME::INTEGRAND_TYPE, \
                         ::integrators::fitfunctions::PolySingular::type \
+                    >&>(*integrator) \
+                    ,number_of_presamples, \
+                    deformation_parameters_maximum, \
+                    deformation_parameters_minimum, \
+                    deformation_parameters_decrease_factor \
+                ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Baker::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Baker::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
                     >&>(*integrator) \
                     ,number_of_presamples, \
                     deformation_parameters_maximum, \
@@ -293,6 +343,31 @@ namespace %(name)s
                     deformation_parameters_minimum, \
                     deformation_parameters_decrease_factor \
                 ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
+                    >&>(*integrator) \
+                    ,number_of_presamples, \
+                    deformation_parameters_maximum, \
+                    deformation_parameters_minimum, \
+                    deformation_parameters_decrease_factor \
+                ); \
             }
     
         #define DYNAMIC_CAST_INTEGRATOR_SIDI_QMC(SIDIDEGREE) \
@@ -364,6 +439,31 @@ namespace %(name)s
                         ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                         INTEGRAL_NAME::INTEGRAND_TYPE, \
                         ::integrators::fitfunctions::PolySingular::type \
+                    >&>(*integrator) \
+                    ,number_of_presamples, \
+                    deformation_parameters_maximum, \
+                    deformation_parameters_minimum, \
+                    deformation_parameters_decrease_factor \
+                ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
                     >&>(*integrator) \
                     ,number_of_presamples, \
                     deformation_parameters_maximum, \
@@ -452,6 +552,27 @@ namespace %(name)s
                         ::integrators::fitfunctions::PolySingular::type \
                     >&>(*integrator) \
                 ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::None::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::None::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
+                    >&>(*integrator) \
+                ); \
             }
 
         #define DYNAMIC_CAST_INTEGRATOR_BAKER_QMC() \
@@ -515,6 +636,27 @@ namespace %(name)s
                         ::integrators::transforms::Baker::type, \
                         INTEGRAL_NAME::INTEGRAND_TYPE, \
                         ::integrators::fitfunctions::PolySingular::type \
+                    >&>(*integrator) \
+                ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Baker::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Baker::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
                     >&>(*integrator) \
                 ); \
             }
@@ -582,6 +724,27 @@ namespace %(name)s
                         ::integrators::fitfunctions::PolySingular::type \
                     >&>(*integrator) \
                 ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
+                    >&>(*integrator) \
+                ); \
             }
     
         #define DYNAMIC_CAST_INTEGRATOR_SIDI_QMC(SIDIDEGREE) \
@@ -645,6 +808,27 @@ namespace %(name)s
                         ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                         INTEGRAL_NAME::INTEGRAND_TYPE, \
                         ::integrators::fitfunctions::PolySingular::type \
+                    >&>(*integrator) \
+                ); \
+            } \
+            if(dynamic_cast<const secdecutil::integrators::Qmc< \
+                INTEGRAL_NAME::integrand_return_t, \
+                INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                INTEGRAL_NAME::INTEGRAND_TYPE, \
+                ::integrators::fitfunctions::Cnf::type \
+            >*>(integrator)) \
+            { \
+                return make_amplitudes( \
+                    real_parameters, \
+                    complex_parameters, \
+                    lib_path, \
+                    dynamic_cast<const secdecutil::integrators::Qmc< \
+                        INTEGRAL_NAME::integrand_return_t, \
+                        INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                        ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                        INTEGRAL_NAME::INTEGRAND_TYPE, \
+                        ::integrators::fitfunctions::Cnf::type \
                     >&>(*integrator) \
                 ); \
             }
@@ -750,6 +934,15 @@ namespace %(name)s
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
                 >&, \
+                unsigned, real_t, real_t, real_t); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::None::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
+                >&, \
                 unsigned, real_t, real_t, real_t);
 
         #define INSTANTIATE_MAKE_AMPLITUDES_BAKER_QMC() \
@@ -778,6 +971,15 @@ namespace %(name)s
                     ::integrators::transforms::Baker::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&, \
+                unsigned, real_t, real_t, real_t); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Baker::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&, \
                 unsigned, real_t, real_t, real_t);
     
@@ -808,6 +1010,15 @@ namespace %(name)s
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
                 >&, \
+                unsigned, real_t, real_t, real_t); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
+                >&, \
                 unsigned, real_t, real_t, real_t);
     
         #define INSTANTIATE_MAKE_AMPLITUDES_SIDI_QMC(SIDIDEGREE) \
@@ -836,6 +1047,15 @@ namespace %(name)s
                     ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&, \
+                unsigned, real_t, real_t, real_t); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&, \
                 unsigned, real_t, real_t, real_t);
     
@@ -868,6 +1088,14 @@ namespace %(name)s
                     ::integrators::transforms::None::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::None::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&);
     
         #define INSTANTIATE_MAKE_AMPLITUDES_BAKER_QMC() \
@@ -894,6 +1122,14 @@ namespace %(name)s
                     ::integrators::transforms::Baker::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Baker::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&);
     
         #define INSTANTIATE_MAKE_AMPLITUDES_KOROBOV_QMC(KOROBOVDEGREE1,KOROBOVDEGREE2) \
@@ -920,6 +1156,14 @@ namespace %(name)s
                     ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Korobov<KOROBOVDEGREE1,KOROBOVDEGREE2>::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&);
     
         #define INSTANTIATE_MAKE_AMPLITUDES_SIDI_QMC(SIDIDEGREE) \
@@ -946,6 +1190,14 @@ namespace %(name)s
                     ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
                     INTEGRAL_NAME::INTEGRAND_TYPE, \
                     ::integrators::fitfunctions::PolySingular::type \
+                >&); \
+            template std::vector<nested_series_t<sum_t>> make_amplitudes(const std::vector<real_t>&, const std::vector<complex_t>&, const std::string&, \
+                const secdecutil::integrators::Qmc< \
+                    INTEGRAL_NAME::integrand_return_t, \
+                    INTEGRAL_NAME::maximal_number_of_integration_variables, \
+                    ::integrators::transforms::Sidi<SIDIDEGREE>::type, \
+                    INTEGRAL_NAME::INTEGRAND_TYPE, \
+                    ::integrators::fitfunctions::Cnf::type \
                 >&);
     #endif
     

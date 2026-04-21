@@ -1327,111 +1327,6 @@ def _process_secondary_sector(environment):
     decomposed_polynomial_derivatives = set(decomposed_polynomial_derivatives)
     ordered_decomposed_derivative_names = set(ordered_decomposed_derivative_names)
 
-    # --------------------------------------------------------
-
-    print_latex = False
-    simplify = True
-
-    #print(f"integrand: {integrand}\n")
-    #print(f"cal_I_derivatives: {cal_I_derivatives}\n")
-    #print(f"other_derivatives: {other_derivatives}\n")
-    #print(f"decomposed_derivatives: {decomposed_derivatives}\n")
-    #print(f"contourdef_Jacobian_derivatives: {contourdef_Jacobian_derivatives}\n")
-    #print(f"deformed_integration_variable_derivatives: {deformed_integration_variable_derivatives}\n")
-
-    all_int_vars = [v.name for v in all_integration_variables]
-    print(f"all integration variables: {all_int_vars}")
-
-    int_vars = [v.name for v in integration_variables]
-    print(f"current integration variables: {int_vars}")
-
-    if 'deformation_parameters' not in locals():
-        deformation_parameters = []
-    def_params = [p.name for p in deformation_parameters]
-    print(f"deformation parameters: {def_params}")
-
-    real_params = [p.name for p in real_parameters]
-    print(f"real parameters: {real_params}")
-
-    complex_params = [p.name for p in complex_parameters]
-    print(f"complex parameters: {complex_params}")
-
-    regulators = [r.name for r in regulators]
-    print(f"regulators: {regulators}")
-    #exit(0)
-
-    from sympy.parsing.sympy_parser import parse_expr
-    from sympy.core.function import UndefinedFunction
-    import sympy
-
-    # combine all function definitions into a single dictionary
-    superdict = cal_I_derivatives | other_derivatives | decomposed_derivatives | \
-                contourdef_Jacobian_derivatives | deformed_integration_variable_derivatives
-
-    # tell SymPy about real and positive variables, to aid with simplification
-    symbol_dict = dict(zip(all_int_vars, sympy.symbols(all_int_vars, positive=True))) | \
-                  dict(zip(real_params, sympy.symbols(real_params, real=True))) | \
-                  dict(zip(regulators, sympy.symbols(regulators, real=True)))
-
-    # ordered list of arguments used in function definitions
-    arg_symbols = [symbol_dict[n] for n in int_vars + regulators]
-
-    # convert SecDec symbolic expressions into SymPy symbolic expressions
-    superdict = {k: parse_expr(str(v), symbol_dict) for k, v in superdict.items()}
-    integrand_sympy = parse_expr(str(integrand), symbol_dict)
-
-    while True:
-        # replace all undefined functions which are defined in our dictionary
-        def check_replacement(e):
-            return type(e.func) == UndefinedFunction and e.func.name in superdict
-
-        # look up function definition and substitute arguments
-        def do_replacement(e):
-            if len(e.args) not in [len(int_vars), len(int_vars) + len(regulators)]:
-                print("unexpected item in bagging area:")
-                print(f"args = {x.args}")
-                print(f"func name = {x.func.name}")
-                print(f"func def = {superdict[x.func.name]}")
-                exit(1)
-            return superdict[e.func.name].subs(dict(zip(arg_symbols, e.args))) # we need the symbols here
-
-        new_integrand_sympy = integrand_sympy.replace(check_replacement, do_replacement)
-
-        # exit the loop if no new replacements have been made
-        if new_integrand_sympy == integrand_sympy:
-            break
-
-        integrand_sympy = new_integrand_sympy
-
-    # replace calls to SecDecInternalRealPart(...) with re(...)
-    integrand_sympy = integrand_sympy.replace( \
-        lambda e: e.func.__name__ == "SecDecInternalRealPart", \
-        lambda e: sympy.re(e.args[0]))
-
-    # shorten contour deformation parameter names SecDecInternalLambda{i} -> L{i}
-    integrand_sympy = integrand_sympy.subs({n: f"L{i}" for i,n in enumerate(def_params)})
-
-    print(f"\nfull integrand:\n{sympy.latex(integrand_sympy) if print_latex else integrand_sympy}\n")
-
-    # take epsilon -> 0 in all exponents
-    integrand_sympy = integrand_sympy.replace(
-        lambda x: isinstance(x, sympy.core.power.Pow),
-        lambda x: x.base**x.exp.subs(symbol_dict["eps"], 0)
-    )
-
-    # print coefficients of powers of epsilon from -5 to 5
-    prepared = integrand_sympy.expand().collect(symbol_dict["eps"])
-    for i in range(-5,5):
-        coeff = prepared.coeff(symbol_dict["eps"], i)
-        if simplify:
-            try:
-                coeff = coeff.simplify().factor()
-            except Exception:
-                print("exception during simplification!")
-        print(f"eps^{i}: {sympy.latex(coeff) if print_latex else coeff}\n")
-
-    # --------------------------------------------------------
-
     # generate the function definitions for the insertion in FORM
     if contour_deformation_polynomial is not None:
         FORM_vanishing_deformed_integration_variable_calls = ''.join(
@@ -1871,12 +1766,7 @@ def make_package(name, integration_variables, regulators, requested_orders,
         `New in version 1.5`.
         Default: ``['korobov3x3']``
     '''
-
-    processes = 1
-
     print('running "make_package" for "' + name + '"')
-
-    print("poly: ", contour_deformation_polynomial)
 
     # convert input data types to the data types we need
     name, integration_variables, ibp_power_goal, regulators, \

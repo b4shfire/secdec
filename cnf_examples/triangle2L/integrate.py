@@ -3,16 +3,14 @@
 from pySecDec.integral_interface import IntegralLibrary
 import sympy as sp
 
+fit = "cnf"
+precision = 1e-2
+
 if __name__ == "__main__":
-
-    # load c++ library
     triangle2L = IntegralLibrary('triangle2L/triangle2L_pylink.so')
+    triangle2L.use_Qmc(verbosity=0, minn=1, maxeval=int(1e15), fitfunction=fit)
 
-    # choose integrator
-    triangle2L.use_Vegas()
-
-    # integrate
-    str_integral_without_prefactor, str_prefactor, str_integral_with_prefactor = triangle2L(real_parameters=[9.0],complex_parameters=[1.0], verbose=True)
+    str_integral_without_prefactor, str_prefactor, str_integral_with_prefactor = triangle2L(real_parameters=[9.0],complex_parameters=[1.0], epsrel=0, epsabs=precision, verbose=True)
 
     # convert complex numbers from c++ to sympy notation
     str_integral_with_prefactor = str_integral_with_prefactor.replace(',','+I*')
