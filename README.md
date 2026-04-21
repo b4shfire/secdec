@@ -3,6 +3,54 @@ pySecDec
 
 [![Documentation Status](https://readthedocs.org/projects/secdec/badge/?version=latest)](http://secdec.readthedocs.io/en/latest/?badge=latest)
 
+CNF variance reduction
+----------------------------------
+
+This fork extends the QMC integrator with support for variance reduction based on continuous normalising flows (CNFs). This variance reduction can be enabled with:
+
+```python
+<integral library>.use_Qmc(fitfunction="cnf")
+```
+
+For performance reasons, it is highly recommended to use a system with a GPU.
+
+### Build
+
+```bash
+git clone https://github.com/b4shfire/secdec
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install SCons enscons toml torchdiffeq
+make build  # takes a while!
+python3 -m pip install -e .
+```
+
+### Run (box1L example)
+
+Terminal A | Generate and compile the example:
+
+```bash
+source venv/bin/activate
+cd secdec/cnf_examples/box1L
+./generate.py
+make -C box1L -j <cores>
+```
+
+Terminal B | Start the CNF server (wait for "Ready" log message):
+
+```bash
+source venv/bin/activate
+./secdec/pySecDecContrib/cnf.py
+```
+
+Terminal A | Run the integration:
+
+```bash
+./integrate.py
+```
+
+---
+
 pySecDec is a toolbox for the calculation of dimensionally
 regulated parameter integrals using the sector decomposition approach.
 
