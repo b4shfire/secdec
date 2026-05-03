@@ -21,6 +21,7 @@ git clone https://github.com/b4shfire/secdec
 python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install SCons enscons toml torchdiffeq
+cd secdec
 make build  # takes a while!
 python3 -m pip install -e .
 ```
