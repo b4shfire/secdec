@@ -423,6 +423,12 @@ namespace integrators
             inline char* const ctrl_addr = reinterpret_cast<char*>(0xc0d30000);
             inline char* const data_addr = reinterpret_cast<char*>(0xda1a0000);
 
+            inline std::size_t& qmc_data_sz()
+            {
+                static std::size_t n = 0;
+                return n;
+            }
+
             // Serialises separate integrands (QMC instances).
             inline std::mutex& integrand_mutex()
             {
@@ -437,7 +443,7 @@ namespace integrators
                 return m;
             }
 
-            inline void map_shm(const char* name, void* addr)
+            inline std::size_t map_shm(const char* name, void* addr)
             {
                 int fd = shm_open(name, O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
                 if (fd == -1) { std::perror(name); std::exit(1); }
@@ -446,6 +452,7 @@ namespace integrators
                 if (mmap(addr, st.st_size, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_SHARED, fd, 0) == MAP_FAILED) {
                     std::perror(name); std::exit(1);
                 }
+                return static_cast<std::size_t>(st.st_size);
             }
 
             inline void ensure_shm_mapped()
@@ -456,8 +463,8 @@ namespace integrators
                     if (ctrl_name == nullptr) ctrl_name = "qmc_ctrl";
                     const char* data_name = std::getenv("QMC_DATA_NAME");
                     if (data_name == nullptr) data_name = "qmc_data";
-                    map_shm(ctrl_name, ctrl_addr);
-                    map_shm(data_name, data_addr);
+                    (void)map_shm(ctrl_name, ctrl_addr);
+                    qmc_data_sz() = map_shm(data_name, data_addr);
                 });
             }
         }
@@ -548,6 +555,10 @@ namespace integrators
                     char* cnf_data = cnf_detail::data_addr;
 
                     if (cnf_ctrl[0] != 5) throw std::runtime_error("qmc_ctrl: invalid state");
+
+                    const std::size_t need = std::size_t(count) * (std::size_t(ndim) + 1U) * sizeof(double);
+                    if (need > cnf_detail::qmc_data_sz())
+                        throw std::runtime_error("qmc_data too small");
 
                     std::memcpy(cnf_data, x, count * ndim * sizeof(double));
                     reinterpret_cast<long*>(cnf_ctrl)[1] = count;
